@@ -1,0 +1,77 @@
+import os
+import streamlit as st
+import base64
+
+# Set up directory for uploaded files
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+
+# Create the upload directory if it doesn't exist
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Set a secret key for Streamlit session (you can use an environment variable)
+st.set_option('deprecation.showfileUploaderEncoding', False)
+st.session_state['uploaded_file'] = None
+
+# Custom HTML and JavaScript code for Dropzone
+dropzone_html_code = """
+<div style="margin: 20px; padding: 20px; border: 2px dashed #cccccc; text-align: center;">
+  <h3>Drag and Drop or Click to Upload</h3>
+  <p>(Only .txt, .csv, and .pdf files are allowed)</p>
+  <input type="file" id="fileInput" style="display: none;">
+  <script>
+    var fileInput = document.getElementById('fileInput');
+    var droppedFiles = false;
+
+    fileInput.addEventListener('change', function(event) {
+      st.file_uploader(event);
+    });
+
+    document.addEventListener('dragover', function(event) {
+      event.preventDefault();
+      droppedFiles = true;
+      document.getElementById('fileInput').style.display = 'block';
+    });
+
+    document.addEventListener('dragleave', function(event) {
+      event.preventDefault();
+      droppedFiles = false;
+      document.getElementById('fileInput').style.display = 'none';
+    });
+
+    document.addEventListener('drop', function(event) {
+      event.preventDefault();
+      if (droppedFiles) {
+        document.getElementById('fileInput').style.display = 'none';
+        st.file_uploader(event);
+      }
+    });
+  </script>
+</div>
+"""
+
+def upload_file():
+    # Render the upload page
+    st.title("File Upload App")
+    st.markdown(dropzone_html_code, unsafe_allow_html=True)
+
+def dashboard():
+    # Retrieve the uploaded file name from the session
+    uploaded_file = st.session_state.uploaded_file
+    if uploaded_file:
+        st.title("Dashboard")
+        st.write(f"Uploaded File: {uploaded_file}")
+    else:
+        st.warning("No file uploaded. Please upload a file using the dropzone.")
+
+def main():
+    page = st.sidebar.selectbox("Select a page", ["Upload File", "Dashboard"])
+
+    if page == "Upload File":
+        upload_file()
+    elif page == "Dashboard":
+        dashboard()
+
+if __name__ == '__main__':
+    main()
